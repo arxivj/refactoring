@@ -11,26 +11,8 @@ function statement(invoice, plays) {
     }).format;
 
     for (let perf of invoice.performances) {
-        const play = plays[perf.playID];
-        let thisAmount = 0;
-
-        switch (play.type) {
-            case "tragedy":
-                thisAmount = 40000;
-                if (perf.audience > 30) {
-                    thisAmount += 1000 * (perf.audience - 30);
-                }
-                break;
-            case "comedy":
-                thisAmount = 30000;
-                if (perf.audience > 20) {
-                    thisAmount += 10000 + 500 * (perf.audience - 20);
-                }
-                thisAmount += 300 * perf.audience;
-                break;
-            default:
-                throw new Error(`알 수 없는 장르: ${play.type}`);
-        }
+        const play = playFor(perf); // 우변을 함수로 추출
+        let thisAmount = amountFor(perf, play);
 
         // 포인트를 적립한다.
         volumeCredits += Math.max(perf.audience - 30, 0);
@@ -46,9 +28,34 @@ function statement(invoice, plays) {
     return result;
 }
 
-// JSON 파일 읽기
 const invoices = JSON.parse(fs.readFileSync('invoices.json', 'utf8'));
 const plays = JSON.parse(fs.readFileSync('plays.json', 'utf8'));
 
-// 첫 번째 청구서에 대한 청구 내역 출력
 console.log(statement(invoices[0], plays));
+
+function playFor(aPerformance){
+    return plays[aPerformance.playID];
+}
+
+function amountFor(aPerformance, play){
+    let result = 0; // 명확한 이름으로 변경
+
+    switch (play.type) {
+            case "tragedy":
+                result = 40000;
+                if (aPerformance.audience > 30) {
+                    result += 1000 * (aPerformance.audience - 30);
+                }
+                break;
+            case "comedy":
+                result = 30000;
+                if (aPerformance.audience > 20) {
+                    result += 10000 + 500 * (aPerformance.audience - 20);
+                }
+                result += 300 * aPerformance.audience;
+                break;
+            default:
+                throw new Error(`알 수 없는 장르: ${play.type}`);
+        }
+        return result;
+}
